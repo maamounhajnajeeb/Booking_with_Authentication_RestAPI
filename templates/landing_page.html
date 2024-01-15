@@ -1,0 +1,128 @@
+{% comment %} {% extends 'template.html' %} {% endcomment %}
+{% load static %}
+{% block content %}
+
+	<head>
+
+		<title>Buy Me Coffee</title>
+		<script src="https://js.stripe.com/v3/"></script>
+
+	</head>
+
+	<style>
+		.StripeElement {
+			box-sizing: border-box;
+			height: 40px;
+			padding: 10px 12px;
+			border: 1px solid transparent;
+			border-radius: 4px;
+			background-color: white;
+			box-shadow: 0 1px 3px 0 #e6ebf1;
+			-webkit-transition: box-shadow 150ms ease;
+			transition: box-shadow 150ms ease;
+		}
+
+		.StripeElement--focus {
+			box-shadow: 0 1px 3px 0 #e6ebf1;
+		}
+
+		.StripeElement--invalid {
+			box-color: #fa755a;
+		}
+
+		.StripeElement--webkit-autofill {
+			background-color: #fefde5 !important;
+		}
+	</style>
+
+
+	<form action="{% url 'charge' %}" method="post" id="payment-form">
+		{% csrf_token %}
+		<div class="form-row">
+			
+			<select required name="amount" id="amount">
+				<option selected value="500">$500 Economy Class</option>
+				<option value="1000">$1000 Mid Class</option>
+				<option value="1500">$1500 First Class</option>
+			</select>
+
+			<label for="card-element">
+				Credit or debit card
+			</label>
+
+			<div id="card-element">
+
+			</div>
+
+			<div id="card-errors" role="alert">
+
+			</div>
+
+		</div>
+		<button>Submit Payment</button>
+
+	</form>
+
+	<script>
+		var stripe = Stripe("pk_test_51NkkK1Feq4GSqlxQgeZEDgdKlidDxGI9Lq2zxnHEo7yCwnVbRKKWlTwnU6AswGazL6ZSCuWXgePMi85GUpO6oydE002UjlqE77");
+
+		var elements = stripe.elements();
+
+		var style = {
+			base: {
+				color: "#32325d",
+				fontFamily: "Helvetica Neue, Helvetica, sans-serif",
+				
+				"::placeholder": {
+					color: "#aab7c4"
+				}
+			},
+			invalid: {
+				color: "#fa755a",
+				iconColor: "#fa755a",
+			}
+		};
+
+		var card = elements.create("card", {style: style});
+
+		card.mount("#card-element");
+
+		card.addEventListener("change", function(e) {
+			var displayError = document.getElementById("card-errors");
+
+			if (e.error) {
+				displayError.textContent = e.error.message;
+			} else {
+				displayError.textContent = '';
+			}
+		});
+
+		// handle form submission
+		var form = document.getElementById('payment-form');
+		form.addEventListener("submit", function(e) {
+			e.preventDefault();
+
+			stripe.createToken(card).then(function (result) {
+				if (result.error) {
+					var errorElement = document.getElementById('card-errors');
+					errorElement.textContent = result.error.message;
+				} else {
+					stripeTokenHandler(result.token);
+				}
+			});
+		});
+
+		// submit the form with the token id
+		function stripeTokenHandler(token) {
+			var form = document.getElementById("payment-form");
+			var hiddenInput = document.createElement("input");
+			hiddenInput.setAttribute("type", "hidden");
+			hiddenInput.setAttribute("name", "stripeToken");
+			hiddenInput.setAttribute("value", token.id);
+			form.appendChild(hiddenInput);
+
+			form.submit()
+		}
+	</script>
+	
+{% endblock content %}

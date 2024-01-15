@@ -1,0 +1,8 @@
+<form method="POST" action="../api/v1/booking/">
+    {% csrf_token %}
+    <input type="text" name="destination" />
+    <input type="number" name="person_age" />
+    <input type="date" name="depart_date" />
+    <input type="date" name="returning_date" />
+    <input type="submit" />
+</form>
